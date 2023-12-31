@@ -52,9 +52,8 @@ class ApplyServiceTest {
 
         }
         countDownLatch.await();
-
         long count = couponRepository.count();
-        assertThat(count).isEqualTo(threadCount);
+        assertThat(count).isEqualTo(100);
     }
 
 
