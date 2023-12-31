@@ -38,12 +38,11 @@ class ApplyServiceTest {
         int threadCount = 1000;
 
         ExecutorService executorService = Executors.newFixedThreadPool(32);//병렬 작업을 도와주는 자바 API
-
         CountDownLatch countDownLatch = new CountDownLatch(threadCount);// 다른 쓰레드의 작업이 끝날떄까지 기다려주게 도와주는 클래스
 
         for (int i = 0; i < threadCount; i++) {
             long userId = i;
-            executorService.submit(() -> applyService.apply(userId));
+            executorService.submit(() -> applyService.apply(userId)); // producer -> topic 으로 데이터 전달
             try {
                 applyService.apply(userId);
             } finally {
@@ -52,6 +51,31 @@ class ApplyServiceTest {
 
         }
         countDownLatch.await();
+        Thread.sleep(10000);
+        long count = couponRepository.count();
+        assertThat(count).isEqualTo(100);
+    }
+
+    @Test
+    @DisplayName("한명당 한개의 쿠포만 발급")
+    void applyV3() throws InterruptedException {
+        int threadCount = 1000;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(32);//병렬 작업을 도와주는 자바 API
+        CountDownLatch countDownLatch = new CountDownLatch(threadCount);// 다른 쓰레드의 작업이 끝날떄까지 기다려주게 도와주는 클래스
+
+        for (int i = 0; i < threadCount; i++) {
+            long userId = i;
+            executorService.submit(() -> applyService.apply(userId)); // producer -> topic 으로 데이터 전달
+            try {
+                applyService.apply(1L);
+            } finally {
+                countDownLatch.countDown();
+            }
+
+        }
+        countDownLatch.await();
+        Thread.sleep(10000);
         long count = couponRepository.count();
         assertThat(count).isEqualTo(100);
     }
